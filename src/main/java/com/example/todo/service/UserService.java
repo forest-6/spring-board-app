@@ -20,12 +20,12 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository repository;
     private final JwtService jwtService;
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository, JwtService jwtService) {
+    public UserService(UserRepository repository, JwtService jwtService, BCryptPasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -39,7 +39,8 @@ public class UserService implements UserDetailsService {
                 .findByUsername(username)
                 .ifPresent(user -> { throw new UserAlreadyExistsException(); });
 
-        var userEntity = repository.signUp(username, passwordEncoder.encode(password));
+        var encodedPw = passwordEncoder.encode(password);
+        var userEntity = repository.signUp(username, encodedPw);
         return User.from(userEntity);
     }
 
@@ -51,7 +52,6 @@ public class UserService implements UserDetailsService {
 
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-
 
         repository.saveRefreshToken(username, refreshToken);
 
