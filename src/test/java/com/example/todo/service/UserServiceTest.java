@@ -4,6 +4,7 @@ import com.example.todo.domain.UserEntity;
 import com.example.todo.dto.user.User;
 import com.example.todo.dto.user.UserRefreshTokenResponse;
 import com.example.todo.exception.user.UserAlreadyExistsException;
+import com.example.todo.repository.TokenCacheRepository;
 import com.example.todo.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,9 @@ class UserServiceTest {
     @Mock
     private JwtService jwtService;
     @Mock
-    private UserRepository repository;
+    private UserRepository userRepository;
+    @Mock
+    private TokenCacheRepository tokenCacheRepository;
 
     @Test
     @DisplayName("로그인 성공")
@@ -43,7 +46,7 @@ class UserServiceTest {
 
         UserEntity mockUser = UserEntity.of(username, encodedPw);
 
-        when(repository.findByUsername(username)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(password, mockUser.getPassword())).thenReturn(true);
         when(jwtService.generateAccessToken(mockUser)).thenReturn("mock-access-token");
         when(jwtService.generateRefreshToken(mockUser)).thenReturn("mock-refresh-token");
@@ -56,7 +59,7 @@ class UserServiceTest {
 
         assertEquals("mock-access-token", response.accessToken());
         assertEquals("mock-refresh-token", response.refreshToken());
-        verify(repository, times(1)).saveRefreshToken(username, "mock-refresh-token");
+        verify(tokenCacheRepository, times(1)).setTokenCache(eq(username), eq("mock-refresh-token"), any(java.time.Duration.class));
     }
 
     @Test
@@ -69,7 +72,7 @@ class UserServiceTest {
 
         UserEntity mockUser = UserEntity.of(username, encodedPw);
 
-        when(repository.findByUsername(username)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(password, mockUser.getPassword())).thenReturn(false);
 
         // when
@@ -79,7 +82,7 @@ class UserServiceTest {
 
         // then
         assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
-        verify(repository, never()).saveRefreshToken(any(), any());
+        verify(tokenCacheRepository, never()).setTokenCache(any(), any(), any());
     }
 
     @Test
@@ -92,9 +95,9 @@ class UserServiceTest {
 
         UserEntity mockUser = UserEntity.of(username, encodedPw);
 
-        when(repository.findByUsername(username)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         when(passwordEncoder.encode(password)).thenReturn(encodedPw);
-        when(repository.signUp(username, encodedPw)).thenReturn(mockUser);
+        when(userRepository.signUp(username, encodedPw)).thenReturn(mockUser);
 
         // when
         User response = userService.signUp(username, password);
@@ -113,7 +116,7 @@ class UserServiceTest {
 
         UserEntity mockUser = UserEntity.of(username, encodedPw);
 
-        when(repository.findByUsername(username)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
 
         // when
         UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class, () -> {
@@ -122,6 +125,6 @@ class UserServiceTest {
 
         // then
         assertEquals("이미 존재하는 사용자입니다.", exception.getMessage());
-        verify(repository, never()).signUp(username, encodedPw);
+        verify(userRepository, never()).signUp(username, encodedPw);
     }
 }

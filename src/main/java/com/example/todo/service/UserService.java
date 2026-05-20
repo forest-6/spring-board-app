@@ -6,8 +6,8 @@ import com.example.todo.dto.user.UserRefreshTokenResponse;
 import com.example.todo.dto.user.UserTokenResponse;
 import com.example.todo.exception.ClientErrorException;
 import com.example.todo.exception.user.UserAlreadyExistsException;
+import com.example.todo.repository.TokenCacheRepository;
 import com.example.todo.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,32 +15,38 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Service
 public class UserService implements UserDetailsService {
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final JwtService jwtService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final TokenCacheRepository tokenCacheRepository;
 
-    public UserService(UserRepository repository, JwtService jwtService, BCryptPasswordEncoder passwordEncoder) {
-        this.repository = repository;
+    public UserService(UserRepository userRepository, JwtService jwtService, BCryptPasswordEncoder passwordEncoder, TokenCacheRepository tokenCacheRepository) {
+        this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.tokenCacheRepository = tokenCacheRepository;
     }
+
+    private static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(14);
 
     @Override
     public UserEntity loadUserByUsername(String username) throws UsernameNotFoundException {
-        return repository.findByUsername(username)
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
     }
 
     public User signUp(String username, String password) {
-        repository
+        userRepository
                 .findByUsername(username)
                 .ifPresent(user -> { throw new UserAlreadyExistsException(); });
 
         var encodedPw = passwordEncoder.encode(password);
-        var userEntity = repository.signUp(username, encodedPw);
+        var userEntity = userRepository.signUp(username, encodedPw);
         return User.from(userEntity);
     }
 
@@ -53,7 +59,7 @@ public class UserService implements UserDetailsService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        repository.saveRefreshToken(username, refreshToken);
+        tokenCacheRepository.setTokenCache(username, refreshToken, REFRESH_TOKEN_TTL);
 
         return new UserRefreshTokenResponse(accessToken, refreshToken);
     }
@@ -66,7 +72,8 @@ public class UserService implements UserDetailsService {
 
         String username = jwtService.getUsername(refreshToken);
         UserEntity user = loadUserByUsername(username);
-        String serverRefreshToken = repository.getRefreshToken(user.getUsername());
+        String serverRefreshToken = tokenCacheRepository.getTokenCache(user.getUsername())
+                .orElseThrow(()->new ClientErrorException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 리프레시 토큰입니다."));
 
         if (serverRefreshToken == null || !serverRefreshToken.equals(refreshToken)) {
             throw new ClientErrorException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 리프레시 토큰입니다.");
@@ -78,7 +85,7 @@ public class UserService implements UserDetailsService {
     }
 
     public void logout(UserEntity user) {
-        repository.removeRefreshToken(user.getUsername());
+        tokenCacheRepository.deleteTokenCache(user.getUsername());
 
     }
 }

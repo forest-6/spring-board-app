@@ -36,19 +36,4 @@ public class UserRepository {
         return findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
     }
-
-    public void saveRefreshToken(String username, String refreshToken) {
-        String sql = "UPDATE users SET refresh_token = ? WHERE username = ?";
-        jdbcTemplate.update(sql, refreshToken, username);
-    }
-
-    public String getRefreshToken(String username) {
-        String sql = "SELECT refresh_token FROM users WHERE username = ?";
-        return jdbcTemplate.queryForObject(sql, String.class, username);
-    }
-
-    public void removeRefreshToken(String username) {
-        String sql = "UPDATE users SET refresh_token = null WHERE username = ?";
-        jdbcTemplate.update(sql, username);
-    }
 }
