@@ -34,11 +34,11 @@ public class UserController {
         return ResponseEntity.ok(service.refreshToken(request.refreshToken()));
     }
 
-    @GetMapping("logout")
-    public ResponseEntity<Void> logut(
+    @GetMapping("signout")
+    public ResponseEntity<Void> signout(
             @AuthenticationPrincipal UserEntity user
     ) {
-        service.logout(user);
+        service.signout(user);
         return ResponseEntity.ok().build();
     }
 }

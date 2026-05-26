@@ -1,5 +1,6 @@
 package com.example.todo.service;
 
+import com.example.todo.domain.RefreshTokenCacheEntity;
 import com.example.todo.domain.UserEntity;
 import com.example.todo.dto.user.User;
 import com.example.todo.dto.user.UserRefreshTokenResponse;
@@ -59,7 +60,7 @@ class UserServiceTest {
 
         assertEquals("mock-access-token", response.accessToken());
         assertEquals("mock-refresh-token", response.refreshToken());
-        verify(tokenCacheRepository, times(1)).setTokenCache(eq(username), eq("mock-refresh-token"), any(java.time.Duration.class));
+        verify(tokenCacheRepository, times(1)).save(new RefreshTokenCacheEntity(eq(username), eq("mock-refresh-token"), any(Long.class)));
     }
 
     @Test
@@ -82,7 +83,7 @@ class UserServiceTest {
 
         // then
         assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
-        verify(tokenCacheRepository, never()).setTokenCache(any(), any(), any());
+        verify(tokenCacheRepository, never()).save(new RefreshTokenCacheEntity(any(), any(), any()));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.example.todo.service;
 
+import com.example.todo.domain.RefreshTokenCacheEntity;
 import com.example.todo.domain.UserEntity;
 import com.example.todo.dto.user.User;
 import com.example.todo.dto.user.UserRefreshTokenResponse;
@@ -59,7 +60,7 @@ public class UserService implements UserDetailsService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        tokenCacheRepository.setTokenCache(username, refreshToken, REFRESH_TOKEN_TTL);
+        tokenCacheRepository.save(new RefreshTokenCacheEntity(username, refreshToken, REFRESH_TOKEN_TTL.toSeconds()));
 
         return new UserRefreshTokenResponse(accessToken, refreshToken);
     }
@@ -72,8 +73,9 @@ public class UserService implements UserDetailsService {
 
         String username = jwtService.getUsername(refreshToken);
         UserEntity user = loadUserByUsername(username);
-        String serverRefreshToken = tokenCacheRepository.getTokenCache(user.getUsername())
-                .orElseThrow(()->new ClientErrorException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 리프레시 토큰입니다."));
+        RefreshTokenCacheEntity serverCache = tokenCacheRepository.findById(user.getUsername())
+                .orElseThrow(() -> new ClientErrorException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 리프레시 토큰입니다."));
+        String serverRefreshToken = serverCache.getRefreshToken();
 
         if (serverRefreshToken == null || !serverRefreshToken.equals(refreshToken)) {
             throw new ClientErrorException(HttpStatus.UNAUTHORIZED, "사용할 수 없는 리프레시 토큰입니다.");
@@ -84,8 +86,8 @@ public class UserService implements UserDetailsService {
         return new UserTokenResponse(newAccessToken);
     }
 
-    public void logout(UserEntity user) {
-        tokenCacheRepository.deleteTokenCache(user.getUsername());
+    public void signout(UserEntity user) {
+        tokenCacheRepository.deleteById(user.getUsername());
 
     }
 }
