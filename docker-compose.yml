@@ -27,7 +27,7 @@ services:
       SPRING_PROFILES_ACTIVE: "docker"
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - "C:/todo_upload:/app/upload"
+      - "C:/board_upload:/app/upload"
     depends_on:
       - board-mysql
       - redis-stack

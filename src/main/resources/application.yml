@@ -2,4 +2,4 @@ spring:
   profiles:
     active: local
 file:
-  upload-dir: C:/todo_upload/
+  upload-dir: C:/board_upload/

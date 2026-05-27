@@ -1,0 +1,9 @@
+package com.example.board.repository;
+
+import com.example.board.domain.RefreshTokenCacheEntity;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TokenCacheRepository extends CrudRepository<RefreshTokenCacheEntity, String> {
+}
