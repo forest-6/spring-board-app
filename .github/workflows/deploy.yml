@@ -54,10 +54,6 @@ jobs:
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
             cd /home/ubuntu/spring-board-app
-            
-            export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            
-            docker compose pull board-app     
-            docker compose up -d board-app
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DB_PASSWORD=${{ secrets.DB_PASSWORD }} docker compose pull
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }} DB_PASSWORD=${{ secrets.DB_PASSWORD }} docker compose up -d
             docker image prune -f
