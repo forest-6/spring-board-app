@@ -43,8 +43,6 @@ public class WebConfiguration {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/*/files/*")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/*/cicd-test")
-                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .sessionManagement(

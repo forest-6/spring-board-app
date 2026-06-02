@@ -44,7 +44,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/app
+            cd /home/ubuntu/spring-board-app
             docker compose pull board-app    
-            docker compose up -d --build     
+            docker compose up -d board-app
             docker image prune -f
