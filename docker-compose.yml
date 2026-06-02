@@ -19,7 +19,7 @@ services:
       - "8001:8001"
 
   board-app:
-    build: .
+    image: ${DOCKER_USERNAME}/board-app:latest
     container_name: board-app-container
     ports:
       - "8080:8080"
