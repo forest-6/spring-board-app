@@ -9,7 +9,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - "C:/board_mysql_data:/var/lib/mysql"
+      - "./board_mysql_data:/var/lib/mysql"
 
   redis-stack:
     image: redis/redis-stack:latest
@@ -27,7 +27,7 @@ services:
       SPRING_PROFILES_ACTIVE: "docker"
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - "C:/board_upload:/app/upload"
+      - "./board_upload:/app/upload"
     depends_on:
       - board-mysql
       - redis-stack
