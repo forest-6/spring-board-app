@@ -50,7 +50,7 @@ class UserServiceTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(password, mockUser.getPassword())).thenReturn(true);
         when(jwtService.generateAccessToken(mockUser)).thenReturn("mock-access-token");
-        when(jwtService.generateRefreshToken(mockUser)).thenReturn("mock-refresh-token");
+        when(jwtService.generateRefreshToken(eq(mockUser), anyString())).thenReturn("mock-refresh-token");
 
         // when
         UserRefreshTokenResponse response = userService.signIn(username, password);
@@ -60,7 +60,7 @@ class UserServiceTest {
 
         assertEquals("mock-access-token", response.accessToken());
         assertEquals("mock-refresh-token", response.refreshToken());
-        verify(tokenCacheRepository, times(1)).save(new RefreshTokenCacheEntity(eq(username), eq("mock-refresh-token"), any(Long.class)));
+        verify(tokenCacheRepository, times(1)).save(any(RefreshTokenCacheEntity.class));
     }
 
     @Test
@@ -83,7 +83,7 @@ class UserServiceTest {
 
         // then
         assertEquals("비밀번호가 일치하지 않습니다.", exception.getMessage());
-        verify(tokenCacheRepository, never()).save(new RefreshTokenCacheEntity(any(), any(), any()));
+        verify(tokenCacheRepository, never()).save(any(RefreshTokenCacheEntity.class));
     }
 
     @Test

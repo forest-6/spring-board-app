@@ -30,7 +30,7 @@ public class UserController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<UserTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<UserRefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(service.refreshToken(request.refreshToken()));
     }
 
