@@ -10,6 +10,8 @@ import com.example.board.exception.post.PostNotFoundException;
 import com.example.board.repository.FileRepository;
 import com.example.board.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,6 +68,7 @@ public class PostService {
         return PagingResult.of(totalCount, request.pageSize(), request.pageIndex(), rows);
     }
 
+    @Cacheable(cacheNames = "post", key = "#id", sync = true)
     public PostDetailResponse getPost(Long id) {
         PostEntity post = postRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
         List<FileResponse> files = postRepository.findFilesByPostId(id)
@@ -74,6 +77,7 @@ public class PostService {
         return PostDetailResponse.from(post, files);
     }
 
+    @CacheEvict(cacheNames = "post", key = "#request.id()")
     public void updatePost(PostUpdateRequest request, Long userId) {
         var postDetail = getPost(request.id());
 
@@ -84,6 +88,7 @@ public class PostService {
         postRepository.update(request);
     }
 
+    @CacheEvict(cacheNames = "post", key = "#id")
     public void deletePost(Long id, Long userId) {
         var postDetail = getPost(id);
 
