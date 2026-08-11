@@ -98,4 +98,15 @@ public class PostService {
 
         postRepository.delete(id);
     }
+
+    // 틀린 방법
+    public void increaseViewCountWrong(Long id) {
+        int current = postRepository.findViewCount(id);
+        postRepository.updateViewCount(id, current+1);
+    }
+
+    // 맞는 방법
+    public void increaseViewCountRight(Long id) {
+        postRepository.increaseViewCountAtomic(id);
+    }
 }

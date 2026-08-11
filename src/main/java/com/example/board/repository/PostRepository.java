@@ -107,4 +107,21 @@ public class PostRepository {
         String sql = "DELETE FROM posts WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
+
+    public int findViewCount(Long id) {
+        String sql = "SELECT view_count FROM posts WHERE id = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, id);
+    }
+
+    // 틀린 방법
+    public void updateViewCount(Long id, int viewCount) {
+        String sql = "UPDATE posts SET view_count = ? WHERE id = ?";
+        jdbcTemplate.update(sql, viewCount, id);
+    }
+
+    // 맞는 방법
+    public void increaseViewCountAtomic(Long id){
+        String sql = "UPDATE posts SET view_count = view_count + 1 WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }
